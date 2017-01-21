@@ -45,5 +45,5 @@ EOF
 /etc/init.d/mosquitto restart
 
 # Build our /cafile
-[ ! -d /var/cache/git/paho.mqtt.c ] && (cd /var/cache/git; git clone git@github.com:jameswhite/easy-rsa.git)
+[ ! -d /var/cache/git/paho.mqtt.c ] && (cd /var/cache/git; git clone git@github.com:jameswhite/paho.mqtt.c.git)
 # /usr/sbin/mosquitto -c /etc/mosquitto/mosquitto.conf
