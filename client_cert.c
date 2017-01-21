@@ -571,6 +571,8 @@ int test2a_m(struct Options options)
 	}
 
 	opts.ssl = &sslopts;
+        opts.ssl->enabledCipherSuites = "ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-RSA-RC4-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES128-SHA:AES256-SHA256:AES256-SHA:RC4-SHA:!aNULL:!eNULL:!LOW:!3DES:!MD5:!EXP:!PSK:!SRP:!DSS:!EDH";
+	opts.ssl->enableServerCertAuth = 0;
 
 	if (options.server_key_file) 
 	        MyLog(LOGA_INFO, "Using server key file %s\n",options.server_key_file);
