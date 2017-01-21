@@ -83,7 +83,7 @@ Vagrant.configure("2") do |config|
     build_cmd = [
                   "[ ! -d /var/cache/git ] && mkdir -p /var/cache/git",
                   "[ ! -d /var/cache/git/#{repo_name} ] && (cd /var/cache/git; git clone git@github.com:jameswhite/hates.software.git)",
-                  "(cd /var/cache/git/#{repo_name}; git branch | egrep -q '* #{branch_name}' || git fetch && git branch -r | egrep -q '#{branch_name}' && git checkout -b #{branch_name} origin/#{branch_name} || git checkout #{branch_name})",
+                  "(cd /var/cache/git/#{repo_name}; git branch | egrep -q '* #{branch_name}' || git fetch && git branch -r | egrep -q '#{branch_name}' && git checkout -b #{branch_name} origin/#{branch_name} || git checkout #{branch_name}); git pull origin #{branch_name}",
                   "(cd /var/cache/git/#{repo_name}; ./script/build)",
                 ].join(';')
     config.vm.provision :shell, inline: build_cmd

@@ -1,3 +1,5 @@
 #!/bin/bash
+[ ! -d /root/.ssh ] && mkdir -p /root/.ssh
+[ ! -f /root/.ssh/authorized_keys ] && cat /home/vagrant/.ssh/authorized_keys > /root/.ssh/authorized_keys
 dpkg -l | egrep -q "ii *mosquitto" || apt-get install -qqfy mosquitto
 [ ! -d /var/cache/git/easy-rsa ] && (cd /var/cache/git; https://github.com/jameswhite/easy-rsa)
