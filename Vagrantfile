@@ -63,8 +63,8 @@ Vagrant.configure("2") do |config|
 #    "[ ! -f /etc/apt/sources.list.d/docker.list ] && echo 'deb https://apt.dockerproject.org/repo #{docker_repo} main' > /etc/apt/sources.list.d/docker.list",
 #    "apt-get -qqy update",
 #    "apt-get -qqfy install",
-    "apt-get -qqfy install #{setup_deps.join(' ')}",
-    "usermod -a -G docker vagrant",
+#    "apt-get -qqfy install #{setup_deps.join(' ')}",
+#    "usermod -a -G docker vagrant",
     "ssh-keyscan github.com > /tmp/github.com.key",
     "wget -q -O - https://help.github.com/articles/what-are-github-s-ssh-key-fingerprints/ | grep $(ssh-keygen -lf /tmp/github.com.key | awk '{print $2}') >/dev/null 2>&1 && grep $(cat /tmp/github.com.key) /etc/ssh/ssh_known_hosts >/dev/null 2>&1 || cat  /tmp/github.com.key | sudo tee /etc/ssh/ssh_known_hosts > /dev/null 2>&1",
   ]
