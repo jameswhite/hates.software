@@ -2,7 +2,11 @@
 
 # Set up ssh as root
 [ ! -d /root/.ssh ] && mkdir -p /root/.ssh
-[ ! -f /root/.ssh/authorized_keys ] && cat /home/vagrant/.ssh/authorized_keys > /root/.ssh/authorized_keys
+if [ ! -f /root/.ssh/authorized_keys ] ; then
+  cat /home/vagrant/.ssh/authorized_keys > /root/.ssh/authorized_keys
+else
+  egrep -q "$(cat/home/vagrant/.ssh/authorized_keys)" /root/.ssh/authorized_keys || cat /home/vagrant/.ssh/authorized_keys >> /root/.ssh/authorized_keys
+fi
 
 # Create a certificate authority and a couple certificates for our mqtt server and client
 getent group | egrep -q "^ssl-cert:" || groupadd ssl-cert
@@ -16,12 +20,12 @@ if [ -d /var/cache/git/easy-rsa ]; then
     [ ! -f /var/cache/git/easy-rsa/easyrsa3/pki/req/${CERTIFICATE}.req ] && ( cd /var/cache/git/easy-rsa/easyrsa3; echo "${CERTIFICATE}" | ./easyrsa gen-req ${CERTIFICATE} nopass)
     [ ! -f /var/cache/git/easy-rsa/easyrsa3/pki/issued/${CERTIFICATE}.crt ] && ( cd /var/cache/git/easy-rsa/easyrsa3; echo "yes" |./easyrsa sign client ${CERTIFICATE})
     install -m 0640 -o root -g ssl-cert /var/cache/git/easy-rsa/easyrsa3/pki/private/${CERTIFICATE}.key /etc/ssl/private/${CERTIFICATE}.key
-    install -m 0644 -o root -g ssl-cert /var/cache/git/easy-rsa/easyrsa3/pki/certs/${CERTIFICATE}.crt /etc/ssl/certs/${CERTIFICATE}.crt
+    install -m 0644 -o root -g ssl-cert /var/cache/git/easy-rsa/easyrsa3/pki/issued/${CERTIFICATE}.crt /etc/ssl/certs/${CERTIFICATE}.crt
   done
   c_rehash > /dev/null 2>&1
 fi
 
-# Install and configre mosquitto
+# Install and configure mosquitto
 dpkg -l | egrep -q "ii *mosquitto" || apt-get install -qqfy mosquitto
 usermod -a -G ssl-cert mosquitto
 [ ! -f /etc/mosquitto/mosquitto.conf.dist ] && cp /etc/mosquitto/mosquitto.conf /etc/mosquitto/mosquitto.conf.dist
@@ -41,4 +45,5 @@ EOF
 /etc/init.d/mosquitto restart
 
 # Build our /cafile
+[ ! -d /var/cache/git/paho.mqtt.c ] && (cd /var/cache/git; git clone git@github.com:jameswhite/easy-rsa.git)
 # /usr/sbin/mosquitto -c /etc/mosquitto/mosquitto.conf
