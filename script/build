@@ -5,23 +5,27 @@
 if [ ! -f /root/.ssh/authorized_keys ] ; then
   cat /home/vagrant/.ssh/authorized_keys > /root/.ssh/authorized_keys
 else
-  egrep -q "$(cat/home/vagrant/.ssh/authorized_keys)" /root/.ssh/authorized_keys || cat /home/vagrant/.ssh/authorized_keys >> /root/.ssh/authorized_keys
+  egrep -q "$(cat /home/vagrant/.ssh/authorized_keys)" /root/.ssh/authorized_keys || cat /home/vagrant/.ssh/authorized_keys >> /root/.ssh/authorized_keys
 fi
 
 # Create a certificate authority and a couple certificates for our mqtt server and client
 getent group | egrep -q "^ssl-cert:" || groupadd ssl-cert
+chgrp -R ssl-cert /etc/ssl
+chmod 750 /etc/ssl/private
 [ ! -d /var/cache/git/easy-rsa ] && (cd /var/cache/git; git clone git@github.com:jameswhite/easy-rsa.git)
 if [ -d /var/cache/git/easy-rsa ]; then
+
   [ ! -d /var/cache/git/easy-rsa/easyrsa3/pki ] && ( cd /var/cache/git/easy-rsa/easyrsa3; ./easyrsa init-pki )
   [ ! -f /var/cache/git/easy-rsa/easyrsa3/pki/ca.crt ] && ( cd /var/cache/git/easy-rsa/easyrsa3; echo "ca.hates.software" | ./easyrsa build-ca nopass)
-  install -m 0644 -o root -g ssl-cert /var/cache/git/easy-rsa/easyrsa3/pki/ca.crt /etc/ssl/certs/ca.cert
-  install -m 0644 -o root -g ssl-cert /var/cache/git/easy-rsa/easyrsa3/pki/ca.crt /etc/ssl/certs/ca.cert
+  install -m 0644 -o root -g ssl-cert /var/cache/git/easy-rsa/easyrsa3/pki/ca.crt /etc/ssl/certs/ca.crt
+
   for CERTIFICATE in "mqtt.hates.software" "client.hates.software"; do
-    [ ! -f /var/cache/git/easy-rsa/easyrsa3/pki/req/${CERTIFICATE}.req ] && ( cd /var/cache/git/easy-rsa/easyrsa3; echo "${CERTIFICATE}" | ./easyrsa gen-req ${CERTIFICATE} nopass)
-    [ ! -f /var/cache/git/easy-rsa/easyrsa3/pki/issued/${CERTIFICATE}.crt ] && ( cd /var/cache/git/easy-rsa/easyrsa3; echo "yes" |./easyrsa sign client ${CERTIFICATE})
+    [ ! -f /var/cache/git/easy-rsa/easyrsa3/pki/private/${CERTIFICATE}.key ]&&( cd /var/cache/git/easy-rsa/easyrsa3;echo "${CERTIFICATE}" | ./easyrsa gen-req ${CERTIFICATE} nopass)
+    [ ! -f /var/cache/git/easy-rsa/easyrsa3/pki/issued/${CERTIFICATE}.crt ] && ( cd /var/cache/git/easy-rsa/easyrsa3;echo "yes" |./easyrsa sign client ${CERTIFICATE})
     install -m 0640 -o root -g ssl-cert /var/cache/git/easy-rsa/easyrsa3/pki/private/${CERTIFICATE}.key /etc/ssl/private/${CERTIFICATE}.key
     install -m 0644 -o root -g ssl-cert /var/cache/git/easy-rsa/easyrsa3/pki/issued/${CERTIFICATE}.crt /etc/ssl/certs/${CERTIFICATE}.crt
   done
+
   c_rehash > /dev/null 2>&1
 fi
 
@@ -46,4 +50,17 @@ EOF
 
 # Build our /cafile
 [ ! -d /var/cache/git/paho.mqtt.c ] && (cd /var/cache/git; git clone git@github.com:jameswhite/paho.mqtt.c.git)
-# /usr/sbin/mosquitto -c /etc/mosquitto/mosquitto.conf
+mkdir /tmp/build.paho
+(
+  apt-get update
+  apt-get install -qqfy build-essential gcc git make cmake cmake-gui cmake-curses-gui libssl-dev doxygen graphviz
+  [ ! -d  /var/cache/git ] && mkdir /var/cache/git;
+  [ ! -d  /var/cache/git/paho.mqtt.c ] && (cd /var/cache/git; git clone git@github.com:eclipse/paho.mqtt.c.git)
+  [ ! -d  /tmp/build.paho ] && mkdir /tmp/build.paho
+  (cd /tmp/build.paho; cmake -DPAHO_WITH_SSL=TRUE -DPAHO_BUILD_DOCUMENTATION=TRUE -DPAHO_BUILD_SAMPLES=TRUE /var/cache/git/paho.mqtt.c/)
+  (cd /tmp/build.paho; make)
+  (cd /tmp/build.paho; make install > install.out 2>install.err)
+  grep -q /usr/local/lib /etc/ld.so.conf || echo /usr/local/lib >> /etc/ld.so.conf
+  ldconfig
+  gcc -I /usr/local/include -L /usr/local/lib -lpaho-mqtt3c -o /tmp/test3 /var/cache/git/paho.mqtt.c/test/test3.c -lpaho-mqtt3c
+)
