@@ -70,11 +70,11 @@ echo | openssl s_client -connect mqtt.hates.software:8883 \
                          -cert /etc/ssl/certs/client.hates.software.crt \
                          -key /etc/ssl/private/client.hates.software.key \
                          -CAfile /etc/ssl/certs/ca.crt \
-                         -showcerts 
+                         -showcerts
 
+/tmp/client_cert --server_key        /etc/ssl/certs/mqtt.hates.software.crt \
+                 --client_key        /etc/ssl/certs/client.hates.software.crt \
+                 --client_privatekey /etc/ssl/private/client.hates.software.key \
+                 --hostname mqtt.hates.software --verbose
 
-    /tmp/client_cert --server_key        /etc/ssl/certs/mqtt.hates.software.crt \
-                     --client_key        /etc/ssl/certs/client.hates.software.crt \
-                     --client_privatekey /etc/ssl/private/client.hates.software.key \
-                     --hostname mqtt.hates.software --verbose
-
+tail -100 /var/log/mosquitto/mosquitto.log
