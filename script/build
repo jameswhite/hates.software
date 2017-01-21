@@ -1,23 +1,29 @@
 #!/bin/bash
+
+# Set up ssh as root
 [ ! -d /root/.ssh ] && mkdir -p /root/.ssh
 [ ! -f /root/.ssh/authorized_keys ] && cat /home/vagrant/.ssh/authorized_keys > /root/.ssh/authorized_keys
-dpkg -l | egrep -q "ii *mosquitto" || apt-get install -qqfy mosquitto
+
+# Create a certificate authority and a couple certificates for our mqtt server and client
 [ ! -d /var/cache/git/easy-rsa ] && (cd /var/cache/git; git clone git@github.com:jameswhite/easy-rsa.git)
 if [ -d /var/cache/git/easy-rsa ]; then
   [ ! -d /var/cache/git/easy-rsa/easyrsa3/pki ] && ( cd /var/cache/git/easy-rsa/easyrsa3; ./easyrsa init-pki )
   [ ! -f /var/cache/git/easy-rsa/easyrsa3/pki/ca.crt ] && ( cd /var/cache/git/easy-rsa/easyrsa3; echo "ca.hates.software" | ./easyrsa build-ca nopass)
-  install -m 0644 pki/ca.crt /etc/ssl/certs/ca.cert
-  install -m 0644 pki/ca.crt /etc/ssl/certs/ca.cert
+  install -m 0644 /var/cache/git/easy-rsa/easyrsa3/pki/ca.crt /etc/ssl/certs/ca.cert
+  install -m 0644 /var/cache/git/easy-rsa/easyrsa3/pki/ca.crt /etc/ssl/certs/ca.cert
   for CERTIFICATES in "mqtt.hates.software" "client.hates.software"; do 
     [ ! -f /var/cache/git/easy-rsa/easyrsa3/pki/req/${CERTIFICATE}.req ] && (echo "${CERTIFICATE}" | ./easyrsa gen-req ${CERTIFICATE} nopass)
     [ ! -f /var/cache/git/easy-rsa/easyrsa3/pki/issued/${CERTIFICATE}.crt ] && (echo "${CERTIFICATE}software" | echo "yes" |./easyrsa sign client ${CERTIFICATE})
-    install -m 0640 -u root -g ssl-cert pki/private/${CERTIFICATE}.key /etc/ssl/private/${CERTIFICATE}.key
-    install -m 0644 -u root -g ssl-cert pki/certs/${CERTIFICATE}.crt /etc/ssl/certs/${CERTIFICATE}.crt
+    install -m 0640 -u root -g ssl-cert /var/cache/git/easy-rsa/easyrsa3/pki/private/${CERTIFICATE}.key /etc/ssl/private/${CERTIFICATE}.key
+    install -m 0644 -u root -g ssl-cert /var/cache/git/easy-rsa/easyrsa3/pki/certs/${CERTIFICATE}.crt /etc/ssl/certs/${CERTIFICATE}.crt
   done
   c_rehash
+fi
 
 
-  [ ! -f /etc/mosquitto/mosquitto.conf.dist ] && cp /etc/mosquitto/mosquitto.conf /etc/mosquitto/mosquitto.conf.dist
+# Install and configre mosquitto
+dpkg -l | egrep -q "ii *mosquitto" || apt-get install -qqfy mosquitto
+[ ! -f /etc/mosquitto/mosquitto.conf.dist ] && cp /etc/mosquitto/mosquitto.conf /etc/mosquitto/mosquitto.conf.dist
 cat <<EOF > /etc/mosquitto/mosquitto.conf
 pid_file /var/run/mosquitto.pid
 port 8883
@@ -33,4 +39,5 @@ log_dest file /var/log/mosquitto/mosquitto.log
 EOF
 /etc/init.d/mosquitto restart
 
-fi
+# Build our /cafile
+# /usr/sbin/mosquitto -c /etc/mosquitto/mosquitto.conf
