@@ -2,4 +2,35 @@
 [ ! -d /root/.ssh ] && mkdir -p /root/.ssh
 [ ! -f /root/.ssh/authorized_keys ] && cat /home/vagrant/.ssh/authorized_keys > /root/.ssh/authorized_keys
 dpkg -l | egrep -q "ii *mosquitto" || apt-get install -qqfy mosquitto
-[ ! -d /var/cache/git/easy-rsa ] && (cd /var/cache/git; https://github.com/jameswhite/easy-rsa)
+[ ! -d /var/cache/git/easy-rsa ] && (cd /var/cache/git; git clone git@github.com:jameswhite/easy-rsa.git)
+if [ -d /var/cache/git/easy-rsa ]; then
+  [ ! -d /var/cache/git/easy-rsa/easyrsa3/pki ] && ( cd /var/cache/git/easy-rsa/easyrsa3; ./easyrsa init-pki )
+  [ ! -f /var/cache/git/easy-rsa/easyrsa3/pki/ca.crt ] && ( cd /var/cache/git/easy-rsa/easyrsa3; echo "ca.hates.software" | ./easyrsa build-ca nopass)
+  install -m 0644 pki/ca.crt /etc/ssl/certs/ca.cert
+  install -m 0644 pki/ca.crt /etc/ssl/certs/ca.cert
+  for CERTIFICATES in "mqtt.hates.software" "client.hates.software"; do 
+    [ ! -f /var/cache/git/easy-rsa/easyrsa3/pki/req/${CERTIFICATE}.req ] && (echo "${CERTIFICATE}" | ./easyrsa gen-req ${CERTIFICATE} nopass)
+    [ ! -f /var/cache/git/easy-rsa/easyrsa3/pki/issued/${CERTIFICATE}.crt ] && (echo "${CERTIFICATE}software" | echo "yes" |./easyrsa sign client ${CERTIFICATE})
+    install -m 0640 -u root -g ssl-cert pki/private/${CERTIFICATE}.key /etc/ssl/private/${CERTIFICATE}.key
+    install -m 0644 -u root -g ssl-cert pki/certs/${CERTIFICATE}.crt /etc/ssl/certs/${CERTIFICATE}.crt
+  done
+  c_rehash
+
+
+  [ ! -f /etc/mosquitto/mosquitto.conf.dist ] && cp /etc/mosquitto/mosquitto.conf /etc/mosquitto/mosquitto.conf.dist
+cat <<EOF > /etc/mosquitto/mosquitto.conf
+pid_file /var/run/mosquitto.pid
+port 8883
+cafile   /etc/ssl/certs/ca.crt
+keyfile  /etc/ssl/certs/mqtt.hates.software.key
+certfile /etc/ssl/certs/mqtt.hates.software.crt
+require_certificate true
+use_identity_as_username true
+allow_anonymous false
+ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-RSA-RC4-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES128-SHA:AES256-SHA256:AES256-SHA:RC4-SHA:!aNULL:!eNULL:!LOW:!3DES:!MD5:!EXP:!PSK:!SRP:!DSS:!EDH
+tls_version tlsv1.2
+log_dest file /var/log/mosquitto/mosquitto.log
+EOF
+/etc/init.d/mosquitto restart
+
+fi

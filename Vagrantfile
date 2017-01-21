@@ -50,7 +50,7 @@ Vagrant.configure("2") do |config|
     'ubuntu-precise'
   end
 
-  setup_deps = %w{dpkg-dev pbuilder ruby rubygems git curl gnupg2 docker-engine}
+  setup_deps = %w{dpkg-dev pbuilder ruby rubygems git curl gnupg2}
 
   if distro == "precise"
     setup_deps += ["libjson-ruby"]
@@ -61,9 +61,9 @@ Vagrant.configure("2") do |config|
     "dpkg -l | egrep -q 'ii *apt-transport-https' || apt-get -qqfy install apt-transport-https",
 #    "apt-key list | grep -q '4096R/2C52609D' || apt-key adv --keyserver hkp://pgp.mit.edu:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D",
 #    "[ ! -f /etc/apt/sources.list.d/docker.list ] && echo 'deb https://apt.dockerproject.org/repo #{docker_repo} main' > /etc/apt/sources.list.d/docker.list",
-#    "apt-get -qqy update",
-#    "apt-get -qqfy install",
-#    "apt-get -qqfy install #{setup_deps.join(' ')}",
+    "apt-get -qqy update",
+    "apt-get -qqfy install",
+    "apt-get -qqfy install #{setup_deps.join(' ')}",
 #    "usermod -a -G docker vagrant",
     "ssh-keyscan github.com > /tmp/github.com.key",
     "wget -q -O - https://help.github.com/articles/what-are-github-s-ssh-key-fingerprints/ | grep $(ssh-keygen -lf /tmp/github.com.key | awk '{print $2}') >/dev/null 2>&1 && grep $(cat /tmp/github.com.key) /etc/ssh/ssh_known_hosts >/dev/null 2>&1 || cat  /tmp/github.com.key | sudo tee /etc/ssh/ssh_known_hosts > /dev/null 2>&1",
