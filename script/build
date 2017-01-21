@@ -62,7 +62,7 @@ mkdir /tmp/build.paho
   (cd /tmp/build.paho; make install > install.out 2>install.err)
   grep -q /usr/local/lib /etc/ld.so.conf || echo /usr/local/lib >> /etc/ld.so.conf
   ldconfig
-  gcc -I /usr/local/include -L /usr/local/lib -lpaho-mqtt3c -o /tmp/test3 /var/cache/git/paho.mqtt.c/test/test3.c -lpaho-mqtt3c
+  gcc -I /usr/local/include -L /usr/local/lib -lpaho-mqtt3c -o /tmp/client_cert /var/cache/git/hates.software/client_cert.c -lpaho-mqtt3c
 )
 
 echo | openssl s_client -connect mqtt.hates.software:8883 \
@@ -73,8 +73,7 @@ echo | openssl s_client -connect mqtt.hates.software:8883 \
                          -showcerts 
 
 
-    /tmp/test3       --test_no 2a \ 
-                     --server_key        /etc/ssl/certs/mqtt.hates.software.crt \
+    /tmp/client_cert --server_key        /etc/ssl/certs/mqtt.hates.software.crt \
                      --client_key        /etc/ssl/certs/client.hates.software.crt \
                      --client_privatekey /etc/ssl/private/client.hates.software.key \
                      --hostname mqtt.hates.software --verbose
