@@ -8,6 +8,9 @@ else
   egrep -q "$(cat /home/vagrant/.ssh/authorized_keys)" /root/.ssh/authorized_keys || cat /home/vagrant/.ssh/authorized_keys >> /root/.ssh/authorized_keys
 fi
 
+# Add our hostnames
+egrep mqtt /etc/hosts || sed -i -e 's/\(127.0.1.1.*\)/\1 mqtt.hates.software client.hates.software/' /etc/hosts
+
 # Create a certificate authority and a couple certificates for our mqtt server and client
 getent group | egrep -q "^ssl-cert:" || groupadd ssl-cert
 chgrp -R ssl-cert /etc/ssl
