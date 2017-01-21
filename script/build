@@ -64,3 +64,18 @@ mkdir /tmp/build.paho
   ldconfig
   gcc -I /usr/local/include -L /usr/local/lib -lpaho-mqtt3c -o /tmp/test3 /var/cache/git/paho.mqtt.c/test/test3.c -lpaho-mqtt3c
 )
+
+echo | openssl s_client -connect mqtt.hates.software:8883 \
+                         -tls1_2 \
+                         -cert /etc/ssl/certs/client.hates.software.crt \
+                         -key /etc/ssl/private/client.hates.software.key \
+                         -CAfile /etc/ssl/certs/ca.crt \
+                         -showcerts 
+
+
+    /tmp/test3       --test_no 2a \ 
+                     --server_key        /etc/ssl/certs/mqtt.hates.software.crt \
+                     --client_key        /etc/ssl/certs/client.hates.software.crt \
+                     --client_privatekey /etc/ssl/private/client.hates.software.key \
+                     --hostname mqtt.hates.software --verbose
+
