@@ -14,8 +14,8 @@ if [ -d /var/cache/git/easy-rsa ]; then
   for CERTIFICATE in "mqtt.hates.software" "client.hates.software"; do
     [ ! -f /var/cache/git/easy-rsa/easyrsa3/pki/req/${CERTIFICATE}.req ] && ( cd /var/cache/git/easy-rsa/easyrsa3; echo "${CERTIFICATE}" | ./easyrsa gen-req ${CERTIFICATE} nopass)
     [ ! -f /var/cache/git/easy-rsa/easyrsa3/pki/issued/${CERTIFICATE}.crt ] && ( cd /var/cache/git/easy-rsa/easyrsa3; echo "yes" |./easyrsa sign client ${CERTIFICATE})
-    install -m 0640 -u root -g ssl-cert /var/cache/git/easy-rsa/easyrsa3/pki/private/${CERTIFICATE}.key /etc/ssl/private/${CERTIFICATE}.key
-    install -m 0644 -u root -g ssl-cert /var/cache/git/easy-rsa/easyrsa3/pki/certs/${CERTIFICATE}.crt /etc/ssl/certs/${CERTIFICATE}.crt
+    install -m 0640 -o root -g ssl-cert /var/cache/git/easy-rsa/easyrsa3/pki/private/${CERTIFICATE}.key /etc/ssl/private/${CERTIFICATE}.key
+    install -m 0644 -o root -g ssl-cert /var/cache/git/easy-rsa/easyrsa3/pki/certs/${CERTIFICATE}.crt /etc/ssl/certs/${CERTIFICATE}.crt
   done
   c_rehash > /dev/null 2>&1
 fi
