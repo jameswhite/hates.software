@@ -82,7 +82,6 @@ Vagrant.configure("2") do |config|
     branch_name = ENV['HATES_SOFTWARE_URL'].gsub(/.*\#/,'')
     build_cmd = [
                   "[ ! -d /var/cache/git ] && mkdir -p /var/cache/git",
-                  "dpkg -l | grep -q \"ii *mosquitto\" || apt-get install -qqfy mosquitto",
                   "[ ! -d /var/cache/git/#{repo_name} ] && (cd /var/cache/git; git clone git@github.com:jameswhite/hates.software.git)",
                   "(cd /var/cache/git/#{repo_name}; git branch | egrep -q '* #{branch_name}' || git fetch && git branch -r | egrep -q '#{branch_name}' && git checkout -b #{branch_name} origin/#{branch_name} || git checkout #{branch_name})",
                   "(cd /var/cache/git/#{repo_name}; ./script/build)",
