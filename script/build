@@ -11,7 +11,7 @@ if [ -d /var/cache/git/easy-rsa ]; then
   [ ! -f /var/cache/git/easy-rsa/easyrsa3/pki/ca.crt ] && ( cd /var/cache/git/easy-rsa/easyrsa3; echo "ca.hates.software" | ./easyrsa build-ca nopass)
   install -m 0644 /var/cache/git/easy-rsa/easyrsa3/pki/ca.crt /etc/ssl/certs/ca.cert
   install -m 0644 /var/cache/git/easy-rsa/easyrsa3/pki/ca.crt /etc/ssl/certs/ca.cert
-  for CERTIFICATES in "mqtt.hates.software" "client.hates.software"; do
+  for CERTIFICATE in "mqtt.hates.software" "client.hates.software"; do
     [ ! -f /var/cache/git/easy-rsa/easyrsa3/pki/req/${CERTIFICATE}.req ] && ( cd /var/cache/git/easy-rsa/easyrsa3; echo "${CERTIFICATE}" | ./easyrsa gen-req ${CERTIFICATE} nopass)
     [ ! -f /var/cache/git/easy-rsa/easyrsa3/pki/issued/${CERTIFICATE}.crt ] && ( cd /var/cache/git/easy-rsa/easyrsa3; echo "yes" |./easyrsa sign client ${CERTIFICATE})
     install -m 0640 -u root -g ssl-cert /var/cache/git/easy-rsa/easyrsa3/pki/private/${CERTIFICATE}.key /etc/ssl/private/${CERTIFICATE}.key
