@@ -17,7 +17,7 @@ if [ -d /var/cache/git/easy-rsa ]; then
     install -m 0640 -u root -g ssl-cert /var/cache/git/easy-rsa/easyrsa3/pki/private/${CERTIFICATE}.key /etc/ssl/private/${CERTIFICATE}.key
     install -m 0644 -u root -g ssl-cert /var/cache/git/easy-rsa/easyrsa3/pki/certs/${CERTIFICATE}.crt /etc/ssl/certs/${CERTIFICATE}.crt
   done
-  c_rehash
+  c_rehash > /dev/null 2>&1
 fi
 
 
