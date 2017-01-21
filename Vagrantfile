@@ -12,7 +12,7 @@ def system_ncpu
   end
 end
 
-distro = ENV.fetch('DISTRO', 'precise').downcase
+distro = ENV.fetch('DISTRO', 'jessie').downcase
 
 # Leave two cores for OS work, take the rest. Ensure at minimum 1 cpu.
 VAGRANT_NCPU = [system_ncpu - 2, 1].max
@@ -87,5 +87,7 @@ Vagrant.configure("2") do |config|
                   "(cd /var/cache/git/#{repo_name}; ./script/build)",
                 ].join(';')
     config.vm.provision :shell, inline: build_cmd
+  else
+   puts "HATES_SOFTWARE_URL not defined in env."
   end
 end

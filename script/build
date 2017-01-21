@@ -11,24 +11,24 @@ if [ -d /var/cache/git/easy-rsa ]; then
   [ ! -f /var/cache/git/easy-rsa/easyrsa3/pki/ca.crt ] && ( cd /var/cache/git/easy-rsa/easyrsa3; echo "ca.hates.software" | ./easyrsa build-ca nopass)
   install -m 0644 /var/cache/git/easy-rsa/easyrsa3/pki/ca.crt /etc/ssl/certs/ca.cert
   install -m 0644 /var/cache/git/easy-rsa/easyrsa3/pki/ca.crt /etc/ssl/certs/ca.cert
-  for CERTIFICATES in "mqtt.hates.software" "client.hates.software"; do 
-    [ ! -f /var/cache/git/easy-rsa/easyrsa3/pki/req/${CERTIFICATE}.req ] && (echo "${CERTIFICATE}" | ./easyrsa gen-req ${CERTIFICATE} nopass)
-    [ ! -f /var/cache/git/easy-rsa/easyrsa3/pki/issued/${CERTIFICATE}.crt ] && (echo "${CERTIFICATE}software" | echo "yes" |./easyrsa sign client ${CERTIFICATE})
+  for CERTIFICATES in "mqtt.hates.software" "client.hates.software"; do
+    [ ! -f /var/cache/git/easy-rsa/easyrsa3/pki/req/${CERTIFICATE}.req ] && ( cd /var/cache/git/easy-rsa/easyrsa3; echo "${CERTIFICATE}" | ./easyrsa gen-req ${CERTIFICATE} nopass)
+    [ ! -f /var/cache/git/easy-rsa/easyrsa3/pki/issued/${CERTIFICATE}.crt ] && ( cd /var/cache/git/easy-rsa/easyrsa3; echo "yes" |./easyrsa sign client ${CERTIFICATE})
     install -m 0640 -u root -g ssl-cert /var/cache/git/easy-rsa/easyrsa3/pki/private/${CERTIFICATE}.key /etc/ssl/private/${CERTIFICATE}.key
     install -m 0644 -u root -g ssl-cert /var/cache/git/easy-rsa/easyrsa3/pki/certs/${CERTIFICATE}.crt /etc/ssl/certs/${CERTIFICATE}.crt
   done
   c_rehash > /dev/null 2>&1
 fi
 
-
 # Install and configre mosquitto
 dpkg -l | egrep -q "ii *mosquitto" || apt-get install -qqfy mosquitto
+usermod -a -G ssl-cert mosquitto
 [ ! -f /etc/mosquitto/mosquitto.conf.dist ] && cp /etc/mosquitto/mosquitto.conf /etc/mosquitto/mosquitto.conf.dist
 cat <<EOF > /etc/mosquitto/mosquitto.conf
 pid_file /var/run/mosquitto.pid
 port 8883
 cafile   /etc/ssl/certs/ca.crt
-keyfile  /etc/ssl/certs/mqtt.hates.software.key
+keyfile  /etc/ssl/private/mqtt.hates.software.key
 certfile /etc/ssl/certs/mqtt.hates.software.crt
 require_certificate true
 use_identity_as_username true
