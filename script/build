@@ -1,2 +1,3 @@
 #!/bin/bash
-echo "wtf?"
+dpkg -l | egrep -q "ii *mosquitto" || apt-get install -qqfy mosquitto
+[ ! -d /var/cache/git/easy-rsa ] && (cd /var/cache/git; https://github.com/jameswhite/easy-rsa)
