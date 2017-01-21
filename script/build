@@ -5,12 +5,13 @@
 [ ! -f /root/.ssh/authorized_keys ] && cat /home/vagrant/.ssh/authorized_keys > /root/.ssh/authorized_keys
 
 # Create a certificate authority and a couple certificates for our mqtt server and client
+getent group | egrep -q "^ssl-cert:" || groupadd ssl-cert
 [ ! -d /var/cache/git/easy-rsa ] && (cd /var/cache/git; git clone git@github.com:jameswhite/easy-rsa.git)
 if [ -d /var/cache/git/easy-rsa ]; then
   [ ! -d /var/cache/git/easy-rsa/easyrsa3/pki ] && ( cd /var/cache/git/easy-rsa/easyrsa3; ./easyrsa init-pki )
   [ ! -f /var/cache/git/easy-rsa/easyrsa3/pki/ca.crt ] && ( cd /var/cache/git/easy-rsa/easyrsa3; echo "ca.hates.software" | ./easyrsa build-ca nopass)
-  install -m 0644 /var/cache/git/easy-rsa/easyrsa3/pki/ca.crt /etc/ssl/certs/ca.cert
-  install -m 0644 /var/cache/git/easy-rsa/easyrsa3/pki/ca.crt /etc/ssl/certs/ca.cert
+  install -m 0644 -o root -g ssl-cert /var/cache/git/easy-rsa/easyrsa3/pki/ca.crt /etc/ssl/certs/ca.cert
+  install -m 0644 -o root -g ssl-cert /var/cache/git/easy-rsa/easyrsa3/pki/ca.crt /etc/ssl/certs/ca.cert
   for CERTIFICATE in "mqtt.hates.software" "client.hates.software"; do
     [ ! -f /var/cache/git/easy-rsa/easyrsa3/pki/req/${CERTIFICATE}.req ] && ( cd /var/cache/git/easy-rsa/easyrsa3; echo "${CERTIFICATE}" | ./easyrsa gen-req ${CERTIFICATE} nopass)
     [ ! -f /var/cache/git/easy-rsa/easyrsa3/pki/issued/${CERTIFICATE}.crt ] && ( cd /var/cache/git/easy-rsa/easyrsa3; echo "yes" |./easyrsa sign client ${CERTIFICATE})
