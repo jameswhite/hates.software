@@ -1,0 +1,92 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+def system_ncpu
+  case `uname -s`.chomp
+  when 'Darwin'
+    `sysctl -n hw.ncpu`.to_i
+  when 'Linux'
+    `grep -c '^processor' /proc/cpuinfo`.to_i
+  else
+    1
+  end
+end
+
+distro = ENV.fetch('DISTRO', 'precise').downcase
+
+# Leave two cores for OS work, take the rest. Ensure at minimum 1 cpu.
+VAGRANT_NCPU = [system_ncpu - 2, 1].max
+
+Vagrant.configure("2") do |config|
+  # Every Vagrant virtual environment requires a box to build off of.
+  config.vm.box = case distro
+  when 'jessie'
+    config.vm.box_version = '8.5.2'
+    'debian/jessie64'
+  when 'precise'
+    "github/precise64"
+  else
+    $stderr.puts "Unknown DISTRO: #{distro}"
+    exit(1)
+  end
+
+  config.vm.provider :virtualbox do |v|
+    v.memory = "4096"
+    v.cpus = VAGRANT_NCPU
+  end
+
+  config.vm.provider "vmware_fusion" do |v|
+    v.vmx["memsize"] = "4096"
+    v.vmx["numvcpus"] = VAGRANT_NCPU
+  end
+
+  # Remove annoying warnings
+  config.ssh.shell = "bash -c 'BASH_ENV=/etc/profile exec bash'"
+  config.ssh.forward_agent = true
+  docker_repo = case distro
+  when 'jessie'
+    'debian-jessie'
+  when 'precise'
+    'ubuntu-precise'
+  end
+
+  setup_deps = %w{dpkg-dev pbuilder ruby rubygems git curl gnupg2 docker-engine}
+
+  if distro == "precise"
+    setup_deps += ["libjson-ruby"]
+  end
+
+  setup_cmds = [
+    "apt-get -qqy update",
+    "dpkg -l | egrep -q 'ii *apt-transport-https' || apt-get -qqfy install apt-transport-https",
+    "apt-key list | grep -q '4096R/2C52609D' || apt-key adv --keyserver hkp://pgp.mit.edu:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D",
+    "[ ! -f /etc/apt/sources.list.d/docker.list ] && echo 'deb https://apt.dockerproject.org/repo #{docker_repo} main' > /etc/apt/sources.list.d/docker.list",
+    "apt-get -qqy update",
+    "apt-get -qqfy install",
+    "apt-get -qqfy install #{setup_deps.join(' ')}",
+    "usermod -a -G docker vagrant",
+    "ssh-keyscan github.com > /tmp/github.com.key",
+    "wget -q -O - https://help.github.com/articles/what-are-github-s-ssh-key-fingerprints/ | grep $(ssh-keygen -lf /tmp/github.com.key | awk '{print $2}') >/dev/null 2>&1 && grep $(cat /tmp/github.com.key) /etc/ssh/ssh_known_hosts >/dev/null 2>&1 || cat  /tmp/github.com.key | sudo tee /etc/ssh/ssh_known_hosts > /dev/null 2>&1",
+  ]
+
+  # jessie requires the apt-transport-https package to be able to run apt over
+  # https, so install it before doing anything else.
+  if distro == 'jessie'
+    setup_cmds.unshift("apt-get install apt-transport-https")
+  end
+
+  config.vm.provision :shell, inline: setup_cmds.join("\n")
+
+  if ENV['HATES_SOFTWARE_URL']
+    repo_name = ENV['HATES_SOFTWARE_URL'].gsub(/.*\//,'').gsub(/\#.*/,'').gsub(/\.git$/,'')
+    branch_name = ENV['HATES_SOFTWARE_URL'].gsub(/.*\#/,'')
+    build_cmd = [
+                  "[ ! -d /var/cache/git ] && mkdir -p /var/cache/git",
+                  "dpkg -l | grep -q \"ii *mosquitto\" || apt-get install -qqfy mosquitto",
+                  "[ ! -d /var/cache/git/#{repo_name} ] && (cd /var/cache/git; git clone git@github.com:jameswhite/hates.software.git)",
+                  "(cd /var/cache/git/#{repo_name}; git branch | egrep -q '* #{branch_name}' || git fetch && git branch -r | egrep -q '#{branch_name}' && git checkout -b #{branch_name} origin/#{branch_name} || git checkout #{branch_name})",
+                  "(cd /var/cache/git/#{repo_name}; ./script/build)",
+                ].join(';')
+    config.vm.provision :shell, inline: build_cmd
+  end
+end
