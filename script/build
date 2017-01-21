@@ -57,7 +57,7 @@ mkdir /tmp/build.paho
   [ ! -d  /var/cache/git ] && mkdir /var/cache/git;
   [ ! -d  /var/cache/git/paho.mqtt.c ] && (cd /var/cache/git; git clone git@github.com:eclipse/paho.mqtt.c.git)
   [ ! -d  /tmp/build.paho ] && mkdir /tmp/build.paho
-  (cd /tmp/build.paho; cmake -DPAHO_WITH_SSL=TRUE -DPAHO_BUILD_DOCUMENTATION=TRUE -DPAHO_BUILD_SAMPLES=TRUE /var/cache/git/paho.mqtt.c/)
+  (cd /tmp/build.paho; cmake -DPAHO_WITH_SSL=TRUE -DPAHO_BUILD_DOCUMENTATION=TRUE -DPAHO_BUILD_SAMPLES=TRUE /var/cache/git/paho.mqtt.c/ > /tmp/build.paho/cmake.out 2>/tmp/build.paho/cmake.err)
   (cd /tmp/build.paho; make)
   (cd /tmp/build.paho; make install > install.out 2>install.err)
   grep -q /usr/local/lib /etc/ld.so.conf || echo /usr/local/lib >> /etc/ld.so.conf
