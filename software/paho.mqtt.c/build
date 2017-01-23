@@ -1,0 +1,88 @@
+#!/bin/bash
+
+# Set up ssh as root
+[ ! -d /root/.ssh ] && mkdir -p /root/.ssh
+if [ ! -f /root/.ssh/authorized_keys ] ; then
+  cat /home/vagrant/.ssh/authorized_keys > /root/.ssh/authorized_keys
+else
+  egrep -q "$(cat /home/vagrant/.ssh/authorized_keys)" /root/.ssh/authorized_keys || cat /home/vagrant/.ssh/authorized_keys >> /root/.ssh/authorized_keys
+fi
+
+# Add our hostnames
+egrep mqtt /etc/hosts || sed -i -e 's/\(127.0.1.1.*\)/\1 mqtt.hates.software client.hates.software/' /etc/hosts
+
+# Create a certificate authority and a couple certificates for our mqtt server and client
+getent group | egrep -q "^ssl-cert:" || groupadd ssl-cert
+chgrp -R ssl-cert /etc/ssl
+chmod 750 /etc/ssl/private
+[ ! -d /var/cache/git/easy-rsa ] && (cd /var/cache/git; git clone git@github.com:jameswhite/easy-rsa.git)
+if [ -d /var/cache/git/easy-rsa ]; then
+
+  [ ! -d /var/cache/git/easy-rsa/easyrsa3/pki ] && ( cd /var/cache/git/easy-rsa/easyrsa3; ./easyrsa init-pki )
+  [ ! -f /var/cache/git/easy-rsa/easyrsa3/pki/ca.crt ] && ( cd /var/cache/git/easy-rsa/easyrsa3; echo "ca.hates.software" | ./easyrsa build-ca nopass >/dev/null 2>&1)
+  install -m 0644 -o root -g ssl-cert /var/cache/git/easy-rsa/easyrsa3/pki/ca.crt /etc/ssl/certs/ca.crt
+
+  [ ! -f /var/cache/git/easy-rsa/easyrsa3/pki/private/mqtt.hates.software.key ]&&( cd /var/cache/git/easy-rsa/easyrsa3; ./easyrsa build-server-full mqtt.hates.software nopass >/dev/null 2>&1)
+  install -m 0640 -o root -g ssl-cert /var/cache/git/easy-rsa/easyrsa3/pki/private/mqtt.hates.software.key /etc/ssl/private/mqtt.hates.software.key
+  install -m 0644 -o root -g ssl-cert /var/cache/git/easy-rsa/easyrsa3/pki/issued/mqtt.hates.software.crt /etc/ssl/certs/mqtt.hates.software.crt
+
+  [ ! -f /var/cache/git/easy-rsa/easyrsa3/pki/private/client.hates.software.key ]&&( cd /var/cache/git/easy-rsa/easyrsa3; ./easyrsa build-client-full client.hates.software nopass >/dev/null 2>&1)
+  install -m 0640 -o root -g ssl-cert /var/cache/git/easy-rsa/easyrsa3/pki/private/client.hates.software.key /etc/ssl/private/client.hates.software.key
+  install -m 0644 -o root -g ssl-cert /var/cache/git/easy-rsa/easyrsa3/pki/issued/client.hates.software.crt /etc/ssl/certs/client.hates.software.crt
+
+  c_rehash > /dev/null 2>&1
+fi
+
+# Install and configure mosquitto
+dpkg -l | egrep -q "ii *mosquitto" || apt-get install -qqfy mosquitto
+usermod -a -G ssl-cert mosquitto
+[ ! -f /etc/mosquitto/mosquitto.conf.dist ] && cp /etc/mosquitto/mosquitto.conf /etc/mosquitto/mosquitto.conf.dist
+cat <<EOF > /etc/mosquitto/mosquitto.conf
+pid_file /var/run/mosquitto.pid
+port 8883
+cafile   /etc/ssl/certs/ca.crt
+keyfile  /etc/ssl/private/mqtt.hates.software.key
+certfile /etc/ssl/certs/mqtt.hates.software.crt
+require_certificate true
+use_identity_as_username true
+allow_anonymous false
+ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-RSA-RC4-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES128-SHA:AES256-SHA256:AES256-SHA:RC4-SHA:!aNULL:!eNULL:!LOW:!3DES:!MD5:!EXP:!PSK:!SRP:!DSS:!EDH
+tls_version tlsv1.2
+log_dest file /var/log/mosquitto/mosquitto.log
+EOF
+/etc/init.d/mosquitto restart
+
+# Build our test case of paho.mqtt.c with client certificates connecting to our mqtts://mqtt.hates.software:8883 
+[ ! -d /var/cache/git/paho.mqtt.c ] && (cd /var/cache/git; git clone git@github.com:jameswhite/paho.mqtt.c.git)
+mkdir /tmp/build.paho
+(
+  apt-get update
+  apt-get install -qqfy build-essential gcc git make cmake cmake-gui cmake-curses-gui libssl-dev doxygen graphviz
+  [ ! -d  /var/cache/git ] && mkdir /var/cache/git;
+  [ ! -d  /var/cache/git/paho.mqtt.c ] && (cd /var/cache/git; git clone git@github.com:eclipse/paho.mqtt.c.git)
+  [ ! -d  /tmp/build.paho ] && mkdir /tmp/build.paho
+  (cd /tmp/build.paho; cmake -DPAHO_WITH_SSL=TRUE -DPAHO_BUILD_DOCUMENTATION=TRUE -DPAHO_BUILD_SAMPLES=TRUE /var/cache/git/paho.mqtt.c/ > /tmp/build.paho/cmake.out 2>/tmp/build.paho/cmake.err)
+  (cd /tmp/build.paho; make)
+  (cd /tmp/build.paho; make install > install.out 2>install.err)
+  grep -q /usr/local/lib /etc/ld.so.conf || echo /usr/local/lib >> /etc/ld.so.conf
+  ldconfig
+  gcc -I /usr/local/include -L /usr/local/lib -lpaho-mqtt3c -o /tmp/client_cert /var/cache/git/hates.software/software/paho.mqtt.c/client_cert.c -lpaho-mqtt3c
+)
+
+echo | openssl s_client -connect mqtt.hates.software:8883 \
+                         -tls1_2 \
+                         -cert /etc/ssl/certs/client.hates.software.crt \
+                         -key /etc/ssl/private/client.hates.software.key \
+                         -CAfile /etc/ssl/certs/ca.crt \
+                         -showcerts
+
+# Do it enough to overflow the moquitto log buffer
+for i in $(seq 1 10); do
+  /tmp/client_cert --server_key        /etc/ssl/certs/mqtt.hates.software.crt \
+                   --client_key        /etc/ssl/certs/client.hates.software.crt \
+                   --client_privatekey /etc/ssl/private/client.hates.software.key \
+                   --hostname mqtt.hates.software --verbose
+  sleep 1;
+done
+
+tail -100 /var/log/mosquitto/mosquitto.log
