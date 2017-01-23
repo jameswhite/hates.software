@@ -22,12 +22,13 @@ if [ -d /var/cache/git/easy-rsa ]; then
   [ ! -f /var/cache/git/easy-rsa/easyrsa3/pki/ca.crt ] && ( cd /var/cache/git/easy-rsa/easyrsa3; echo "ca.hates.software" | ./easyrsa build-ca nopass >/dev/null 2>&1)
   install -m 0644 -o root -g ssl-cert /var/cache/git/easy-rsa/easyrsa3/pki/ca.crt /etc/ssl/certs/ca.crt
 
-  for CERTIFICATE in "mqtt.hates.software" "client.hates.software"; do
-    [ ! -f /var/cache/git/easy-rsa/easyrsa3/pki/private/${CERTIFICATE}.key ]&&( cd /var/cache/git/easy-rsa/easyrsa3;echo "${CERTIFICATE}" | ./easyrsa gen-req ${CERTIFICATE} nopass >/dev/null 2>&1)
-    [ ! -f /var/cache/git/easy-rsa/easyrsa3/pki/issued/${CERTIFICATE}.crt ] && ( cd /var/cache/git/easy-rsa/easyrsa3;echo "yes" |./easyrsa sign client ${CERTIFICATE} >/dev/null 2>&1)
-    install -m 0640 -o root -g ssl-cert /var/cache/git/easy-rsa/easyrsa3/pki/private/${CERTIFICATE}.key /etc/ssl/private/${CERTIFICATE}.key
-    install -m 0644 -o root -g ssl-cert /var/cache/git/easy-rsa/easyrsa3/pki/issued/${CERTIFICATE}.crt /etc/ssl/certs/${CERTIFICATE}.crt
-  done
+  [ ! -f /var/cache/git/easy-rsa/easyrsa3/pki/private/mqtt.hates.software.key ]&&( cd /var/cache/git/easy-rsa/easyrsa3; ./easyrsa build-server-full mqtt.hates.software nopass >/dev/null 2>&1)
+  install -m 0640 -o root -g ssl-cert /var/cache/git/easy-rsa/easyrsa3/pki/private/mqtt.hates.software.key /etc/ssl/private/mqtt.hates.software.key
+  install -m 0644 -o root -g ssl-cert /var/cache/git/easy-rsa/easyrsa3/pki/issued/mqtt.hates.software.crt /etc/ssl/certs/mqtt.hates.software.crt
+
+  [ ! -f /var/cache/git/easy-rsa/easyrsa3/pki/private/client.hates.software.key ]&&( cd /var/cache/git/easy-rsa/easyrsa3; ./easyrsa build-client-full client.hates.software nopass >/dev/null 2>&1)
+  install -m 0640 -o root -g ssl-cert /var/cache/git/easy-rsa/easyrsa3/pki/private/client.hates.software.key /etc/ssl/private/client.hates.software.key
+  install -m 0644 -o root -g ssl-cert /var/cache/git/easy-rsa/easyrsa3/pki/issued/client.hates.software.crt /etc/ssl/certs/client.hates.software.crt
 
   c_rehash > /dev/null 2>&1
 fi
