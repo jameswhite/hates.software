@@ -51,7 +51,7 @@ log_dest file /var/log/mosquitto/mosquitto.log
 EOF
 /etc/init.d/mosquitto restart
 
-# Build our /cafile
+# Build our test case of paho.mqtt.c with client certificates connecting to our mqtts://mqtt.hates.software:8883 
 [ ! -d /var/cache/git/paho.mqtt.c ] && (cd /var/cache/git; git clone git@github.com:jameswhite/paho.mqtt.c.git)
 mkdir /tmp/build.paho
 (
