@@ -65,7 +65,7 @@ mkdir /tmp/build.paho
   (cd /tmp/build.paho; make install > install.out 2>install.err)
   grep -q /usr/local/lib /etc/ld.so.conf || echo /usr/local/lib >> /etc/ld.so.conf
   ldconfig
-  gcc -I /usr/local/include -L /usr/local/lib -lpaho-mqtt3c -o /tmp/client_cert /var/cache/git/hates.software/client_cert.c -lpaho-mqtt3c
+  gcc -I /usr/local/include -L /usr/local/lib -lpaho-mqtt3c -o /tmp/client_cert /var/cache/git/hates.software/software/paho.mqtt.c/client_cert.c -lpaho-mqtt3c
 )
 
 echo | openssl s_client -connect mqtt.hates.software:8883 \
@@ -75,6 +75,7 @@ echo | openssl s_client -connect mqtt.hates.software:8883 \
                          -CAfile /etc/ssl/certs/ca.crt \
                          -showcerts
 
+# Do it enough to overflow the moquitto log buffer
 for i in $(seq 1 10); do
   /tmp/client_cert --server_key        /etc/ssl/certs/mqtt.hates.software.crt \
                    --client_key        /etc/ssl/certs/client.hates.software.crt \
