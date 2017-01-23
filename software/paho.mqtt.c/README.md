@@ -14,6 +14,6 @@
 ==> default: 1485189674: Socket error on client (null), disconnecting.
 ```
 
-Steps to reproduce: install virtualbox, install vagrant, run `make` in this directory.
+Steps to reproduce: install virtualbox, install vagrant, run `make` in this directory. There will be a `provision.out` file for your perusal.
 This will leave a virtual machine to debug the problem running `make shell` to poke around.
 To burn down the environment: `make clean`
