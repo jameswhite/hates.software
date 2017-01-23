@@ -1,5 +1,5 @@
 default: .vagrant/machines/default/virtualbox/id
-	bash -c "(export DISTRO='jessie'; export HATES_SOFTWARE_NAME='paho.mqtt.c'; export HATES_SOFTWARE_URL='git@github.com:jameswhite/hates.software.git#wtf'; vagrant provision)"
+	bash -c "(export DISTRO='jessie'; export HATES_SOFTWARE_NAME='paho.mqtt.c'; export HATES_SOFTWARE_BRANCH='wtf'; export HATES_SOFTWARE_URL='git@github.com:jameswhite/hates.software.git'; vagrant provision)"
 .vagrant/machines/default/virtualbox/id: Vagrantfile
 	vagrant up
 Vagrantfile:
