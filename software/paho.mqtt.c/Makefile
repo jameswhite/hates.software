@@ -1,10 +1,9 @@
 default: .vagrant/machines/default/virtualbox/id
-	bash -c "(export DISTRO='jessie'; export HATES_SOFTWARE_URL='git@github.com:jameswhite/hates.software.git#wtf'; vagrant provision)"
+	bash -c "(export DISTRO='jessie'; export HATES_SOFTWARE_NAME='paho.mqtt.c'; export HATES_SOFTWARE_URL='git@github.com:jameswhite/hates.software.git#wtf'; vagrant provision)"
 .vagrant/machines/default/virtualbox/id: Vagrantfile
 	vagrant up
 Vagrantfile:
-	cp /Users/jameswhite/dev/jameswhite/hates.software/vagrantfile Vagrantfile
-	# wget -q -O Vagrantfile 'https://raw.githubusercontent.com/jameswhite/hates.software/wtf/Vagrantfile'
+	wget -q -O Vagrantfile 'https://raw.githubusercontent.com/jameswhite/hates.software/wtf/software/paho.mqtt.c/vagrantfile'
 clean:
 	vagrant destroy -f
 	/bin/rm Vagrantfile
