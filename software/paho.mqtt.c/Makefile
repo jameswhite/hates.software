@@ -6,6 +6,5 @@ Vagrantfile:
 	wget -q -O Vagrantfile 'https://raw.githubusercontent.com/jameswhite/hates.software/wtf/software/paho.mqtt.c/vagrantfile'
 clean:
 	vagrant destroy -f
-	/bin/rm Vagrantfile
 shell:
 	vagrant ssh -- -A -l root
