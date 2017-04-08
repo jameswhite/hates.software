@@ -96,11 +96,11 @@ struct Options
 	int test_no;
 } options =
 {
-	"mqtt.hates.software:8883",
-	"mqtt.hates.software:8883",
-	"mqtt.hates.software:8883",
-	"mqtt.hates.software:8883",
-	"mqtt.hates.software:8883",
+	"ssl://mqtt.hates.software:8883",
+	"ssl://mqtt.hates.software:8883",
+	"ssl://mqtt.hates.software:8883",
+	"ssl://mqtt.hates.software:8883",
+	"ssl://mqtt.hates.software:8883",
 	NULL,
 	0,
 	"/etc/ssl/certs/client.hates.software.crt",

@@ -17,3 +17,10 @@
 Steps to reproduce: install virtualbox, install vagrant, run `make` in this directory. There will be a `provision.out` file for your perusal.
 This will leave a virtual machine to debug the problem running `make shell` to poke around.
 To burn down the environment: `make clean`
+
+
+```
+perl -e 'use CPAN; use local::lib "/usr/local/lib/perl5"; CPAN::install(Net::MQTT::Simple);'
+# add use local::lib "/usr/local/lib/perl5"; to /usr/local/lib/perl5/bin/mqtt-simple
+/usr/local/lib/perl5/bin/mqtt-simple -h mqtt.hates.software -s '#' -ssl --ca /etc/ssl/certs/ca.crt --cert /etc/ssl/certs/client.hates.software.crt --key /etc/ssl/private/client.hates.software.key
+```
